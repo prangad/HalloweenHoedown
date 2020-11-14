@@ -1,5 +1,5 @@
 import pygame
-import Person
+import assets.NPCS.Person
 
 class FightMenu:
     def __init__(self, person, enemy):

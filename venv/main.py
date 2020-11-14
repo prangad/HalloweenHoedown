@@ -1,14 +1,15 @@
 import pygame
 import State
 import FightMenu
+import assets.Objects.Neighborhood as Neighborhood
 
 class Window:
     def __init__(self, neighborhood, fight_menu):
         pygame.init()
         self.window = pygame.display.set_mode([800, 800])
         self.running = True
-        self.state = State.MAP
-        self.map = neighborhood
+        self.state = State.NEIGHBORHOOD
+        self.neighborhood = neighborhood
         self.fight_menu = fight_menu
         self.game_loop()
 
@@ -21,8 +22,8 @@ class Window:
             if self.state == State.FIGHT_MENU:
                 for object in self.fight_menu.get_objects():
                     print("drawing fight menu object")
-            elif self.state == State.MAP:
-                for object in self.map.get_objects():
+            elif self.state == State.NEIGHBORHOOD:
+                for object in self.neighborhood.get_objects():
                     print("drawing map object")
             # self.window.fill((150, 150, 150))
             # pygame.draw.circle(self.window, (255, 0, 0), (400, 400), 100)
@@ -35,5 +36,5 @@ if __name__ == "__main__":
     person = None
     enemy = None
     fight_menu = FightMenu.FightMenu(person, enemy)
-    # neighborhood = Map.Map()
-    game = Window(None, fight_menu)
+    neighborhood = Neighborhood.Neighborhood()
+    game = Window(neighborhood, fight_menu)

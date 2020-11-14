@@ -1,5 +1,7 @@
+class Neighborhood:
+    def __init__(self):
+        self.houses = []
 
-
-
-class Road():
+    def get_objects(self):
+        return [self.houses]
     
