@@ -1,5 +1,10 @@
+import pygame
+class Neighborhood:
+    def __init__(self):
+        self.houses = []
 
+    def get_objects(self):
+        return [self.houses]
 
-
-class Road():
-    
+    def draw(self, pygame, window):
+        pygame.draw.circle(window, (255, 0, 0), (400, 400), 100)
