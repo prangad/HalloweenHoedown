@@ -1,18 +1,21 @@
 import pygame
-import State
-import FightMenu
 from assets.Objects.Neighborhood import Neighborhood
 from assets.Objects.Player import Player
 
+class GameState():
+    NEIGHBORHOOD = 1
+    FIGHT_MENU = 2
+
 class Window:
-    def __init__(self, neighborhood, fight_menu):
+    def __init__(self, neighborhood):
         pygame.init()
         self.window = pygame.display.set_mode([1600, 900])
-        self.running = True
-        self.state = State.NEIGHBORHOOD
+
         self.neighborhood = neighborhood
-        self.player = Player()
-        self.fight_menu = fight_menu
+        self.running = True
+        self.state = GameState.NEIGHBORHOOD
+
+        self.player = self.neighborhood.player
         self.game_loop()
 
     def game_loop(self):
@@ -26,7 +29,7 @@ class Window:
                         InteractedHouse = self.neighborhood.getHouseInRange(self.player.position, self.player.config["SIZE"])
                         if InteractedHouse != None:
                             self.fight_menu = self.player.interact(InteractedHouse)
-                            self.state = State.FIGHT_MENU
+                            self.state = GameState.FIGHT_MENU
 
             keys = pygame.key.get_pressed()
             if keys[pygame.K_a]:
@@ -38,11 +41,10 @@ class Window:
             if keys[pygame.K_s]:
                 self.player.move(Player.DOWN)
 
-            if self.state == State.FIGHT_MENU:
+            if self.state == GameState.FIGHT_MENU:
                 self.fight_menu.draw(self.window)
-            elif self.state == State.NEIGHBORHOOD:
+            elif self.state == GameState.NEIGHBORHOOD:
                 self.neighborhood.draw(self.window, self.player.position)
-                self.player.draw(self.window)
 
             pygame.display.flip()
 
@@ -50,6 +52,5 @@ class Window:
 
 
 if __name__ == "__main__":
-    fight_menu = FightMenu.FightMenu(None, None)
     neighborhood = Neighborhood()
-    game = Window(neighborhood, fight_menu)
+    game = Window(neighborhood)

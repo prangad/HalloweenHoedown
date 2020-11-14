@@ -1,11 +1,17 @@
 import pygame
 from assets.Objects.House import House
+from assets.Objects.Player import Player
 
 class Neighborhood:
     def __init__(self):
+        self.player = Player()
         self.houses = []
-        self.houses.append(House((100, 100)))
         self.config = {"COLOR_BACKGROUND": (40, 40, 40)}
+
+        self.populate()
+
+    def populate(self):
+        self.houses.append(House((100, 100)))
 
     def draw(self, window, relativePosition):
         WIDTH = window.get_width()
@@ -14,6 +20,8 @@ class Neighborhood:
 
         for house in self.houses:
             house.draw(window, relativePosition)
+
+        self.player.draw(window)
 
     def getHouseInRange(self, position: (int, int), range: int):
         for house in self.houses:

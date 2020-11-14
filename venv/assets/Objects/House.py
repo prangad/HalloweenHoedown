@@ -9,11 +9,7 @@ from assets.NPCS.Ghoul import Ghoul
 class House():
     def __init__(self, position: (int, int)):
         self.position = position
-        self.monsters = {"Person" : [],
-                         "Zombie" : [],
-                         "Werewolf" : [],
-                         "Vampire": [],
-                         "Ghoul" : []};
+        self.monsters = []
         self.config = {"SIZE": 200,
                        "OUTLINE_COLOR": (0, 0, 0),
                        "OUTLINE_WIDTH": 1,
@@ -23,17 +19,11 @@ class House():
         self.color = pygame.Color((0, 0, 0))
         self.color.hsva = (100-(10*monsterCount), 100, 100, 0)
         print("MONSTERS: {0}".format(monsterCount))
+
+        monsterTypes = [Zombie, Werewolf, Vampire, Ghoul]
         numMonsters = 0;
         while (numMonsters < monsterCount):
-            monsterType = random.choice(["Zombie", "Werewolf", "Vampire", "Ghoul"])
-            if (monsterType == "Zombie"):
-                self.monsters[monsterType].append(Zombie())
-            if (monsterType == "Werewolf"):
-                self.monsters[monsterType].append(Werewolf())
-            if (monsterType == "Vampire"):
-                self.monsters[monsterType].append(Vampire())
-            if (monsterType == "Ghoul"):
-                self.monsters[monsterType].append(Ghoul())
+            self.monsters.append(random.choice(monsterTypes)())
             numMonsters += 1
 
     def draw(self, window, relativePosition):

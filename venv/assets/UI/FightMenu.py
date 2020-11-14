@@ -1,14 +1,22 @@
 import pygame
+import random
+from assets.Objects.House import House
 
 class FightMenu:
     def __init__(self, player, house):
         self.player = player
-        self.house = house
+        self.house:House = house
         self.config = {"UI_MARGIN" : 5,
                        "BORDER_THICKNESS" : 1,
                        "COLOR_BACKGROUND": (40, 40, 40),
                        "COLOR_ACCENT": (200, 200, 200),
-                       "COLOR_PRIMARY": (60, 60, 60)}
+                       "COLOR_PRIMARY": (60, 60, 60),
+                       "MONSTER_SPACING": 20,
+                       "MONSTER_MARGIN": lambda numMonsters: 800 - (numMonsters * 60),
+                       "MONSTER_MIN_Y": 200}
+        self.menuOptions = {"Attack": [],
+                            "Select Weapon": [],
+                            "Flee": []}
 
     def draw(self, window):
         WIDTH = window.get_width()
@@ -37,3 +45,9 @@ class FightMenu:
                                                    (font.get_height() + self.config["UI_MARGIN"]) - self.config["BORDER_THICKNESS"]*2])
         text = font.render("Health: {0}".format(100), True, (180, 0, 0))
         window.blit(text, (self.config["UI_MARGIN"]*2, self.config["UI_MARGIN"]*2))
+
+        #Enemy Drawing
+        monsterPosXScalar = ((WIDTH-self.config["MONSTER_MARGIN"](len(self.house.monsters))*2)/(len(self.house.monsters)-1)) if (len(self.house.monsters) > 1) else 0
+        for i in range(len(self.house.monsters)):
+            self.house.monsters[i].draw(window, ((monsterPosXScalar*i+self.config["MONSTER_MARGIN"](len(self.house.monsters))) if len(self.house.monsters) > 1 else WIDTH/2,
+                                                 self.config["MONSTER_MIN_Y"]))

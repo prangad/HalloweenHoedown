@@ -1,5 +1,5 @@
 import pygame
-from FightMenu import FightMenu
+from assets.UI.FightMenu import FightMenu
 
 class Player():
     LEFT = 0
