@@ -23,8 +23,7 @@ class Window:
                 for object in self.fight_menu.get_objects():
                     print("drawing fight menu object")
             elif self.state == State.NEIGHBORHOOD:
-                for object in self.neighborhood.get_objects():
-                    print("drawing map object")
+                self.neighborhood.draw(pygame, self.window)
             # self.window.fill((150, 150, 150))
             # pygame.draw.circle(self.window, (255, 0, 0), (400, 400), 100)
             pygame.display.flip()
