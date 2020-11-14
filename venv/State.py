@@ -1,0 +1,2 @@
+FIGHT_MENU = 1
+MAP = 2
