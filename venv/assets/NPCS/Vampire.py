@@ -5,6 +5,7 @@ import pygame
 
 class Vampire(NPC):
     def __init__(self):
+        NPC.__init__(self)
         self.health = r.randint(10, 20)
         self.maxHealth = self.health
         self.strength = 10

@@ -1,5 +1,10 @@
 import pygame
+import random
 from assets.UI.FightMenu import FightMenu
+from assets.Weapons.HersheyKiss import HersheyKiss
+from assets.Weapons.SourStraw import SourStraw
+from assets.Weapons.ChocolateBar import ChocolateBar
+from assets.Weapons.NerdBomb import NerdBomb
 
 class Player():
     LEFT = 0
@@ -13,6 +18,14 @@ class Player():
                        "OUTLINE": (0, 0, 0),
                        "SIZE": 25,
                        "OUTLINE_WIDTH": 1}
+        self.health = random.randint(100, 125)
+        self.maxHealth = self.health
+        self.strength = random.randint(10, 20)
+        self.inventory = [HersheyKiss()]
+
+        possibleWeapons = [SourStraw, ChocolateBar, NerdBomb]
+        for i in range(9):
+            self.inventory.append(random.choice(possibleWeapons)())
 
     def draw(self, window):
         WIDTH = window.get_width();

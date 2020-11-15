@@ -1,6 +1,7 @@
 import pygame
 from assets.Objects.Neighborhood import Neighborhood
 from assets.Objects.Player import Player
+from assets.UI.FightMenu import FightMenu
 
 class GameState():
     NEIGHBORHOOD = 1
@@ -12,6 +13,7 @@ class Window:
         self.window = pygame.display.set_mode([1600, 900])
 
         self.neighborhood = neighborhood
+        self.fight_menu = None
         self.running = True
         self.state = GameState.NEIGHBORHOOD
 
@@ -25,11 +27,19 @@ class Window:
                 if event.type == pygame.QUIT:
                     self.running = False
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_SPACE:
-                        InteractedHouse = self.neighborhood.getHouseInRange(self.player.position, self.player.config["SIZE"])
-                        if InteractedHouse != None:
-                            self.fight_menu = self.player.interact(InteractedHouse)
-                            self.state = GameState.FIGHT_MENU
+                    if self.state == GameState.NEIGHBORHOOD:
+                        if event.key == pygame.K_SPACE:
+                            InteractedHouse = self.neighborhood.getHouseInRange(self.player.position, self.player.config["SIZE"])
+                            if InteractedHouse != None:
+                                self.fight_menu = self.player.interact(InteractedHouse)
+                                self.state = GameState.FIGHT_MENU
+                    elif self.state == GameState.FIGHT_MENU:
+                        if event.key == pygame.K_SPACE:
+                            self.fight_menu.select()
+                        if event.key == pygame.K_w:
+                            self.fight_menu.scroll_up()
+                        if event.key == pygame.K_s:
+                            self.fight_menu.scroll_down()
 
             keys = pygame.key.get_pressed()
             if keys[pygame.K_a]:
@@ -42,7 +52,10 @@ class Window:
                 self.player.move(Player.DOWN)
 
             if self.state == GameState.FIGHT_MENU:
-                self.fight_menu.draw(self.window)
+                if self.fight_menu.status != FightMenu.ACTIVE:
+                    self.state = GameState.NEIGHBORHOOD
+                else:
+                    self.fight_menu.draw(self.window)
             elif self.state == GameState.NEIGHBORHOOD:
                 self.neighborhood.draw(self.window, self.player.position)
 

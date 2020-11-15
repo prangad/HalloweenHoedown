@@ -4,6 +4,7 @@ import pygame
 
 class Werewolf(NPC):
     def __init__(self):
+        NPC.__init__(self)
         self.health = 200
         self.maxHealth = self.health
         self.strength = 0

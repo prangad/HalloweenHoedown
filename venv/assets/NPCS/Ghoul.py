@@ -5,6 +5,7 @@ import random as r
 
 class Ghoul(NPC):
     def __init__(self):
+        NPC.__init__(self)
         self.health = r.randint(40, 80)
         self.maxHealth = self.health
         self.strength = 15
