@@ -11,7 +11,8 @@ class Neighborhood:
         self.populate()
 
     def populate(self):
-        self.houses.append(House((100, 100)))
+        for i in range(-5, 5):
+            self.houses.append(House((250 * i, -125)))
 
     def draw(self, window, relativePosition):
         WIDTH = window.get_width()

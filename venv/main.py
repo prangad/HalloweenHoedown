@@ -22,7 +22,7 @@ class Window:
 
     def game_loop(self):
         while self.running:
-            pygame.time.delay(5)
+            pygame.time.delay(2)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False

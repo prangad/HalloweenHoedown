@@ -4,11 +4,17 @@ from assets.Objects.House import House
 from assets.NPCS.Person import Person
 from assets.Resources.Dialog import Dialog
 
+from assets.Weapons.HersheyKiss import HersheyKiss
+from assets.Weapons.ChocolateBar import ChocolateBar
+from assets.Weapons.SourStraw import SourStraw
+from assets.Weapons.NerdBomb import NerdBomb
+
 class FightMenu:
     ACTIVE = -1
     COMPLETE = 0
     FLED = 1
-    DEATH = 2
+    LEFT = 2
+    DEATH = 3
 
     def __init__(self, player, house):
         self.player = player
@@ -21,8 +27,12 @@ class FightMenu:
                        "MONSTER_SPACING": 20,
                        "MONSTER_MARGIN": lambda numMonsters, WIDTH: WIDTH/2 - (numMonsters * WIDTH/25),
                        "MONSTER_MIN_Y": 300}
-        self.menuOptions = {"Attack": self.player.inventory,
+        self.menuOptions = {"Attack": [],
                             "Flee": []}
+        if self.house.monsterCount <= 0:
+            self.menuOptions = {"Leave": [],
+                                "Search": [],
+                                "Sleep": []}
         self.displayOptions = list(self.menuOptions.keys())
         self.selectedOption = 0
         self.status = FightMenu.ACTIVE
@@ -43,20 +53,51 @@ class FightMenu:
             return
 
         if self.turn == self.player:
-            if self.selectedOption == 1:
+            if list(self.menuOptions.keys())[self.selectedOption] == "Leave":
+                self.status = FightMenu.LEFT
+            elif list(self.menuOptions.keys())[self.selectedOption] == "Search":
+                self.notificationQueue.append("You find nothing of interest.")
+            elif list(self.menuOptions.keys())[self.selectedOption] == "Sleep":
+                self.notificationQueue.append("Now might not be the best time to do that.")
+            elif list(self.menuOptions.keys())[self.selectedOption] == "Flee":
                 if (random.random() <= 0.4):
                     self.status = FightMenu.FLED
                 else:
                     self.notificationQueue.append(random.choice(Dialog.FLEE_MESSAGES))
-            elif self.selectedOption == 0:
+            elif list(self.menuOptions.keys())[self.selectedOption] == "Attack":
+                HersheyKissCount, ChocolateBarCount, SourStrawCount, NerdBombCount = self.player.get_inventory_count()
+                self.menuOptions = {"Hershey Kiss (x{0})".format(HersheyKissCount): [],
+                                    "Chocolate Bar (x{0})".format(ChocolateBarCount): [],
+                                    "Sour Straw (x{0})".format(SourStrawCount): [],
+                                    "Nerd Bomb (x{0})".format(NerdBombCount): []}
+                self.selectedOption = 0
+
+            else:
+                weapons = [HersheyKiss, ChocolateBar, SourStraw, NerdBomb]
+                selectedWeapon = self.player.get_weapon(weapons[self.selectedOption])
+
+                if selectedWeapon == None:
+                    self.notificationQueue.append("You do not have any of that weapon.")
+                    return
+
                 for monster in self.house.monsters:
                     if not monster.health <= 0 and not monster.__class__ == Person:
+                        damage = self.player.attack(selectedWeapon, monster)
                         self.notificationQueue.append("You attacked {0} with {1} and did {2} damage.".format(monster.__class__.__name__,
-                                                                                                   self.player.inventory[0].__class__.__name__,
-                                                                                                   self.player.strength))
-                        monster.take_damage(self.player.strength, self.player.inventory[0])
-        else:
-            pass
+                                                                                                   selectedWeapon.__class__.__name__,
+                                                                                                   format(damage, '.2f')))
+                if selectedWeapon.use() == 0:
+                    self.notificationQueue.append("Your weapon has broke.")
+
+                if self.house.monsterCount <= 0:
+                    self.menuOptions = {"Leave": [],
+                                        "Search": [],
+                                        "Sleep": []}
+                else:
+                    self.menuOptions = {"Attack": [],
+                                        "Flee": []}
+
+                self.selectedOption = 0
 
     def draw(self, window):
         WIDTH = window.get_width()
@@ -74,11 +115,20 @@ class FightMenu:
                                                    ((HEIGHT/5)-(self.config["UI_MARGIN"]*2)) - (self.config["BORDER_THICKNESS"]*2)])
 
         # Bottom Menu Options
-        font = pygame.font.SysFont("Verdana", 36)
-        for i in range(len(self.menuOptions.keys())):
-            menuOption = font.render(list(self.menuOptions.keys())[i], True, (255, 200, 200) if (i == self.selectedOption) else (160, 160, 160))
-            window.blit(menuOption, (self.config["UI_MARGIN"]*2 + self.config["BORDER_THICKNESS"],
-                                     (((HEIGHT/5)*4) + self.config["UI_MARGIN"]) + self.config["BORDER_THICKNESS"] + (i*font.get_height())))
+        if len(self.notificationQueue) <= 0:
+            font = pygame.font.SysFont("Verdana", 32)
+            for i in range(len(self.menuOptions.keys())):
+                menuOption = font.render(list(self.menuOptions.keys())[i], True, (255, 200, 200) if (i == self.selectedOption) else (160, 160, 160))
+                window.blit(menuOption, (self.config["UI_MARGIN"]*2 + self.config["BORDER_THICKNESS"],
+                                         (((HEIGHT/5)*4) + self.config["UI_MARGIN"]) + self.config["BORDER_THICKNESS"] + (i*font.get_height())))
+        else:
+            font = pygame.font.SysFont("Segoe UI", 48)
+            notificationText = font.render(self.notificationQueue[0], True, (255, 255, 255))
+            continueText = font.render("Press SPACE to continue...", True, (255, 255, 255))
+            window.blit(notificationText, (self.config["UI_MARGIN"]*2 + self.config["BORDER_THICKNESS"],
+                                           (((HEIGHT/5)*4) + self.config["UI_MARGIN"]) + self.config["BORDER_THICKNESS"]))
+            window.blit(continueText, (self.config["UI_MARGIN"]*2 + self.config["BORDER_THICKNESS"],
+                                       (((HEIGHT/5)*4) + self.config["UI_MARGIN"]) + self.config["BORDER_THICKNESS"] + font.get_height()))
 
         #HUD Drawing
         font = pygame.font.SysFont("Arial Black", 60)
@@ -103,12 +153,3 @@ class FightMenu:
         for i in range(len(self.house.monsters)):
             self.house.monsters[i].draw(window, ((monsterPosXScalar*i+self.config["MONSTER_MARGIN"](len(self.house.monsters), WIDTH)) if len(self.house.monsters) > 1 else WIDTH/2,
                                                  self.config["MONSTER_MIN_Y"]))
-
-        if len(self.notificationQueue) > 0:
-            font = pygame.font.SysFont("Segoe UI", 48)
-            notificationText = font.render(self.notificationQueue[0], True, (255, 255, 255))
-            continueText = font.render("Press SPACE to continue...", True, (255, 255, 255))
-            window.blit(notificationText, (self.config["UI_MARGIN"] + self.config["BORDER_THICKNESS"],
-                                           (((HEIGHT / 50) * 33) + self.config["UI_MARGIN"]) + self.config["BORDER_THICKNESS"]))
-            window.blit(continueText, (self.config["UI_MARGIN"] + self.config["BORDER_THICKNESS"],
-                                           (((HEIGHT / 50) * 36) + self.config["UI_MARGIN"]) + self.config["BORDER_THICKNESS"]))

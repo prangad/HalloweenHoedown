@@ -11,6 +11,4 @@ class Person(NPC):
         self.modifier = 0
 
     def draw(self, window, position: (int, int)):
-        healthbar = Healthbar(self.health, self.maxHealth, (position[0], position[1] - 40))
         pygame.draw.circle(window, (0, 255, 0), position, 20)
-        healthbar.draw(window)

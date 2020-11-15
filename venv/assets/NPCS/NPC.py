@@ -1,5 +1,5 @@
 import random as r
-from EventHandler import Observable, Observer
+from EventHandler import Observable
 
 class NPC(Observable):
     def __init__(self):

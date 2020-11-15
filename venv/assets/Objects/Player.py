@@ -5,8 +5,9 @@ from assets.Weapons.HersheyKiss import HersheyKiss
 from assets.Weapons.SourStraw import SourStraw
 from assets.Weapons.ChocolateBar import ChocolateBar
 from assets.Weapons.NerdBomb import NerdBomb
+from EventHandler import Observer
 
-class Player():
+class Player(Observer):
     LEFT = 0
     UP = 1
     RIGHT = 2
@@ -25,7 +26,10 @@ class Player():
 
         possibleWeapons = [SourStraw, ChocolateBar, NerdBomb]
         for i in range(9):
-            self.inventory.append(random.choice(possibleWeapons)())
+            addedWeapon = random.choice(possibleWeapons)()
+            Observer.__init__(self, addedWeapon)
+            self.inventory.append(addedWeapon)
+
 
     def draw(self, window):
         WIDTH = window.get_width();
@@ -43,5 +47,33 @@ class Player():
         if (direction == Player.DOWN):
             self.position = (self.position[0], self.position[1]+1)
 
+    def get_weapon(self, weaponClass):
+        for i in range(len(self.inventory)):
+            if self.inventory[i].__class__ == weaponClass:
+                return self.inventory[i]
+        return None
+
+    def attack(self, weapon, monster):
+        damage = self.strength*weapon.damage_modifier()
+        monster.take_damage(damage, weapon)
+        return damage
+
+    def get_inventory_count(self):
+        ChocolateBarCount, SourStrawCount, NerdBombCount = 0, 0, 0
+
+        for weapon in self.inventory:
+            if weapon.__class__ == ChocolateBar:
+                ChocolateBarCount += 1
+            elif weapon.__class__ == SourStraw:
+                SourStrawCount += 1
+            elif weapon.__class__ == NerdBomb:
+                NerdBombCount += 1
+
+        return "Unlimited", ChocolateBarCount, SourStrawCount, NerdBombCount
+
+
     def interact(self, House):
         return FightMenu(self, House)
+
+    def notify(self, *args, **kwargs):
+        self.inventory.remove(args[0])
