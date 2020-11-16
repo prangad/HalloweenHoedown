@@ -1,39 +1,47 @@
 import pygame
 import random
-
 from assets.NPCS.Zombie import Zombie
 from assets.NPCS.Werewolf import Werewolf
 from assets.NPCS.Vampire import Vampire
 from assets.NPCS.Ghoul import Ghoul
 from assets.NPCS.Person import Person
-from EventHandler import Observable, Observer
+from EventHandler import Observer
 
 class House(Observer):
     def __init__(self, position: (int, int)):
-        self.position = position
-        self.monsters = []
+        # Random drawing configuration variables.
         self.config = {"SIZE": 200,
                        "OUTLINE_COLOR": (0, 0, 0),
                        "OUTLINE_WIDTH": 1,
                        "ROOF_COLOR": (80, 40, 0)}
 
+        self.position = position
+        self.monsters = []
         self.monsterCount = random.randint(0, 10)
-        self.color = pygame.Color((0, 0, 0))
+        self.color = pygame.Color((0, 0, 0)) # Base color to be overridden later.
 
+        self.populateHouse()
+
+    def populateHouse(self):
         monsterTypes = [Zombie, Werewolf, Vampire, Ghoul]
         numMonsters = 0;
         while (numMonsters < self.monsterCount):
             monster = random.choice(monsterTypes)()
-            Observer.__init__(self, monster)
+            Observer.__init__(self, monster) #Register observers for each monster.
             self.monsters.append(monster)
             numMonsters += 1
 
-    def notify(self, *args, **kwargs):
+    #Receive function handles the death of a monster in the house.
+    def receive(self, *args, **kwargs):
         for i in range(len(self.monsters)):
             if self.monsters[i] == args[0]:
                 self.monsters[i] = Person()
                 self.monsterCount -= 1
 
+
+    ##################################################
+    # "Non-Functional" Drawing Methods
+    ##################################################
     def draw(self, window, relativePosition):
         WIDTH = window.get_width()
         HEIGHT = window.get_height()

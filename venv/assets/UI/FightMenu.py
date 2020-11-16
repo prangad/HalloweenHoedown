@@ -64,6 +64,7 @@ class FightMenu:
                     self.status = FightMenu.FLED
                 else:
                     self.notificationQueue.append(random.choice(Dialog.FLEE_MESSAGES))
+                    self.performMonstersTurn()
             elif list(self.menuOptions.keys())[self.selectedOption] == "Attack":
                 HersheyKissCount, ChocolateBarCount, SourStrawCount, NerdBombCount = self.player.get_inventory_count()
                 self.menuOptions = {"Hershey Kiss (x{0})".format(HersheyKissCount): [],
@@ -73,31 +74,59 @@ class FightMenu:
                 self.selectedOption = 0
 
             else:
-                weapons = [HersheyKiss, ChocolateBar, SourStraw, NerdBomb]
-                selectedWeapon = self.player.get_weapon(weapons[self.selectedOption])
-
-                if selectedWeapon == None:
-                    self.notificationQueue.append("You do not have any of that weapon.")
-                    return
-
-                for monster in self.house.monsters:
-                    if not monster.health <= 0 and not monster.__class__ == Person:
-                        damage = self.player.attack(selectedWeapon, monster)
-                        self.notificationQueue.append("You attacked {0} with {1} and did {2} damage.".format(monster.__class__.__name__,
-                                                                                                   selectedWeapon.__class__.__name__,
-                                                                                                   format(damage, '.2f')))
-                if selectedWeapon.use() == 0:
-                    self.notificationQueue.append("Your weapon has broke.")
-
-                if self.house.monsterCount <= 0:
-                    self.menuOptions = {"Leave": [],
-                                        "Search": [],
-                                        "Sleep": []}
-                else:
-                    self.menuOptions = {"Attack": [],
-                                        "Flee": []}
-
+                self.performPlayerTurn()
                 self.selectedOption = 0
+
+    def performPlayerTurn(self):
+        weapons = [HersheyKiss, ChocolateBar, SourStraw, NerdBomb]
+        selectedWeapon = self.player.get_weapon(weapons[self.selectedOption])
+
+        if selectedWeapon == None:
+            self.notificationQueue.append("You do not have any of that weapon.")
+            return
+
+        for monster in self.house.monsters:
+            if not monster.health <= 0 and not monster.__class__ == Person:
+                damage = self.player.attack(selectedWeapon, monster)
+                self.notificationQueue.append(
+                    "You attacked {0} with {1} and did {2} damage.".format(monster.__class__.__name__,
+                                                                           selectedWeapon.__class__.__name__,
+                                                                           format(damage, '.2f')))
+
+        if selectedWeapon.use() == 0:
+            self.notificationQueue.append("Your weapon has broke.")
+
+        self.performMonstersTurn()
+
+        if self.house.monsterCount <= 0:
+            self.menuOptions = {"Leave": [],
+                                "Search": [],
+                                "Sleep": []}
+        else:
+            self.menuOptions = {"Attack": [],
+                                "Flee": []}
+
+    def performMonstersTurn(self):
+        amountHealed = 0
+        badGuys = []
+        for monster in self.house.monsters:
+            if monster.__class__ == Person:
+                amountHealed += 1
+            else:
+                badGuys.append(monster)
+
+        if len(badGuys) > 0:
+            attackingMonster = random.choice(badGuys)
+            damage = attackingMonster.attack()
+            self.player.take_damage(damage)
+            self.notificationQueue.append(
+                "{0} attacked you and did {1} damage.".format(attackingMonster.__class__.__name__,
+                                                              format(damage, '.2f')))
+        if (amountHealed > 0):
+            self.player.take_damage(amountHealed*-1)
+            self.notificationQueue.append("{0} {1} feeling normal again and {2} you candy. You gain {0} health.".format(amountHealed,
+                                                                                                                          "people are" if amountHealed>1 else "person is",
+                                                                                                                          "toss" if amountHealed>1 else "tosses"))
 
     def draw(self, window):
         WIDTH = window.get_width()

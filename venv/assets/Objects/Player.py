@@ -47,6 +47,15 @@ class Player(Observer):
         if (direction == Player.DOWN):
             self.position = (self.position[0], self.position[1]+1)
 
+    def take_damage(self, damage):
+        self.health = self.health-damage
+        self.health = max(min(self.health, self.maxHealth), 0)
+        if self.health <= 0:
+            self.die()
+
+    def die(self):
+        print("I DIED")
+
     def get_weapon(self, weaponClass):
         for i in range(len(self.inventory)):
             if self.inventory[i].__class__ == weaponClass:
@@ -55,8 +64,8 @@ class Player(Observer):
 
     def attack(self, weapon, monster):
         damage = self.strength*weapon.damage_modifier()
-        monster.take_damage(damage, weapon)
-        return damage
+        trueDamage = monster.take_damage(damage, weapon)
+        return trueDamage
 
     def get_inventory_count(self):
         ChocolateBarCount, SourStrawCount, NerdBombCount = 0, 0, 0
