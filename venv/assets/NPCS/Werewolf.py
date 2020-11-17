@@ -13,12 +13,17 @@ class Werewolf(NPC):
         self.modifier = 40
         self.image = pygame.image.load("assets\\Resources\\Werewolf.png")
 
-    def draw(self, window, position: (int, int)):
-        healthbar = Healthbar(self.health, self.maxHealth, (position[0], position[1] - self.image.get_height()/2 - 10))
-        window.blit(self.image, (position[0] - self.image.get_width() / 2, position[1] - self.image.get_height() / 2))
-        healthbar.draw(window)
-
+    # Overridden take_damage method from parent class to add exception for certain weapons.
     def take_damage(self, damage, weapon):
         if weapon.__class__ == ChocolateBar or weapon.__class__ == SourStraw:
             damage = 0
         return super().take_damage(damage, weapon)
+
+
+    ##################################################
+    # "Non-Functional" Drawing Methods
+    ##################################################
+    def draw(self, window, position: (int, int)):
+        healthbar = Healthbar(self.health, self.maxHealth, (position[0], position[1] - self.image.get_height()/2 - 10))
+        window.blit(self.image, (position[0] - self.image.get_width() / 2, position[1] - self.image.get_height() / 2))
+        healthbar.draw(window)

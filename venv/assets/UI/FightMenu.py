@@ -3,6 +3,7 @@ import random
 from assets.Objects.House import House
 from assets.NPCS.Person import Person
 from assets.Resources.Dialog import Dialog
+from assets.UI.EndScreen import EndScreen
 
 from assets.Weapons.HersheyKiss import HersheyKiss
 from assets.Weapons.ChocolateBar import ChocolateBar
@@ -10,25 +11,30 @@ from assets.Weapons.SourStraw import SourStraw
 from assets.Weapons.NerdBomb import NerdBomb
 
 class FightMenu:
+    # Fight menu variables used to determine the state of the fight.
     ACTIVE = -1
-    COMPLETE = 0
     FLED = 1
     LEFT = 2
     DEATH = 3
+    WIN = 4
 
-    def __init__(self, player, house):
-        self.player = player
-        self.house:House = house
-        self.config = {"UI_MARGIN" : 5,
-                       "BORDER_THICKNESS" : 1,
+    def __init__(self, player, house, cleared):
+        # Random drawing configuration variables.
+        self.config = {"UI_MARGIN": 5,
+                       "BORDER_THICKNESS": 1,
                        "COLOR_BACKGROUND": (40, 40, 40),
                        "COLOR_ACCENT": (200, 200, 200),
                        "COLOR_PRIMARY": (60, 60, 60),
                        "MONSTER_SPACING": 20,
-                       "MONSTER_MARGIN": lambda numMonsters, WIDTH: WIDTH/2 - (numMonsters * WIDTH/25),
+                       "MONSTER_MARGIN": lambda numMonsters, WIDTH: WIDTH / 2 - (numMonsters * WIDTH / 25),
                        "MONSTER_MIN_Y": 300}
+
+        self.player = player
+        self.house = house
+        self.cleared = cleared
         self.menuOptions = {"Attack": [],
                             "Flee": []}
+        # Sets menu options if the player enters a house with no monsters in it.
         if self.house.monsterCount <= 0:
             self.menuOptions = {"Leave": [],
                                 "Search": [],
@@ -36,47 +42,68 @@ class FightMenu:
         self.displayOptions = list(self.menuOptions.keys())
         self.selectedOption = 0
         self.status = FightMenu.ACTIVE
-        self.turn = self.player
-        self.notificationQueue = []
+        self.notificationQueue = [] # Used to display combat and relevant dialog.
+        if self.house.home:
+            self.notificationQueue.append("Momma! Papa! There's monsters everywhe-")
+            self.notificationQueue.append("Oh, no... Not here, too!")
+            self.notificationQueue.append("(This is your home. Take note.)")
 
+        self.endscreen = None
+
+    # Used to scroll up on the selected menu text.
     def scroll_up(self):
         if self.selectedOption > 0 and len(self.notificationQueue) <= 0:
             self.selectedOption -= 1
 
+    # Used to scroll down on the selected menu text.
     def scroll_down(self):
         if (self.selectedOption < len(self.menuOptions)-1) and len(self.notificationQueue) <= 0:
             self.selectedOption += 1
 
+    # Select the highlighted menu option and perform the necessary tasks.
     def select(self):
+        # Displays the next notification in the notification queue.
         if len(self.notificationQueue) > 0:
             self.notificationQueue.pop(0)
             return
 
-        if self.turn == self.player:
-            if list(self.menuOptions.keys())[self.selectedOption] == "Leave":
-                self.status = FightMenu.LEFT
-            elif list(self.menuOptions.keys())[self.selectedOption] == "Search":
+        if list(self.menuOptions.keys())[self.selectedOption] == "Leave": # Handles leaving.
+            self.status = FightMenu.LEFT
+        elif list(self.menuOptions.keys())[self.selectedOption] == "Search": # Handles searching.
+            if (self.house.searched):
                 self.notificationQueue.append("You find nothing of interest.")
-            elif list(self.menuOptions.keys())[self.selectedOption] == "Sleep":
-                self.notificationQueue.append("Now might not be the best time to do that.")
-            elif list(self.menuOptions.keys())[self.selectedOption] == "Flee":
-                if (random.random() <= 0.4):
-                    self.status = FightMenu.FLED
-                else:
-                    self.notificationQueue.append(random.choice(Dialog.FLEE_MESSAGES))
-                    self.performMonstersTurn()
-            elif list(self.menuOptions.keys())[self.selectedOption] == "Attack":
-                HersheyKissCount, ChocolateBarCount, SourStrawCount, NerdBombCount = self.player.get_inventory_count()
-                self.menuOptions = {"Hershey Kiss (x{0})".format(HersheyKissCount): [],
-                                    "Chocolate Bar (x{0})".format(ChocolateBarCount): [],
-                                    "Sour Straw (x{0})".format(SourStrawCount): [],
-                                    "Nerd Bomb (x{0})".format(NerdBombCount): []}
-                self.selectedOption = 0
-
             else:
-                self.performPlayerTurn()
-                self.selectedOption = 0
+                self.house.searched = True
+                self.notificationQueue.append("You found a {0} in the house, and it's been added to your inventory.".format(self.player.addWeapon().__class__.__name__))
+        elif list(self.menuOptions.keys())[self.selectedOption] == "Sleep": # Handles sleeping.
+            if not self.house.home:
+                self.notificationQueue.append("You can't just sleep in random people's houses!")
+                return
+            if self.house.home and self.cleared:
+                self.notificationQueue.append("You collapse on your bed and immediately fall into a deep sleep...")
+                self.status = self.WIN
+                self.endscreen = EndScreen(self.status)
+            else:
+                self.notificationQueue.append("There's monsters everywhere! Now might not be the best time to do that.")
+        elif list(self.menuOptions.keys())[self.selectedOption] == "Flee": # Handles fleeing.
+            if (random.random() <= 0.4):
+                self.status = FightMenu.FLED
+            else:
+                self.notificationQueue.append(random.choice(Dialog.FLEE_MESSAGES))
+                self.performMonstersTurn()
+        elif list(self.menuOptions.keys())[self.selectedOption] == "Attack": # Handles attacking.
+            HersheyKissCount, ChocolateBarCount, SourStrawCount, NerdBombCount = self.player.get_inventory_count()
+            self.menuOptions = {"Hershey Kiss (x{0})".format(HersheyKissCount): [],
+                                "Chocolate Bar (x{0})".format(ChocolateBarCount): [],
+                                "Sour Straw (x{0})".format(SourStrawCount): [],
+                                "Nerd Bomb (x{0})".format(NerdBombCount): []}
+            self.selectedOption = 0
 
+        else:
+            self.performPlayerTurn()
+            self.selectedOption = 0
+
+    # Method to perform a player's turn.
     def performPlayerTurn(self):
         weapons = [HersheyKiss, ChocolateBar, SourStraw, NerdBomb]
         selectedWeapon = self.player.get_weapon(weapons[self.selectedOption])
@@ -89,7 +116,7 @@ class FightMenu:
             if not monster.health <= 0 and not monster.__class__ == Person:
                 damage = self.player.attack(selectedWeapon, monster)
                 self.notificationQueue.append(
-                    "You attacked {0} with {1} and did {2} damage.".format(monster.__class__.__name__,
+                    "You attacked {0} with a {1} and did {2} damage.".format(monster.__class__.__name__,
                                                                            selectedWeapon.__class__.__name__,
                                                                            format(damage, '.2f')))
 
@@ -122,13 +149,29 @@ class FightMenu:
             self.notificationQueue.append(
                 "{0} attacked you and did {1} damage.".format(attackingMonster.__class__.__name__,
                                                               format(damage, '.2f')))
+            if self.player.health <= 0:
+                self.status = self.DEATH
+                self.endscreen = EndScreen(self.status)
+                self.notificationQueue.append("As the monster tears into your halloween candy bag, you ponder...")
+                self.notificationQueue.append("Why...?")
+                self.notificationQueue.append("Your candy falls to the floor in slow motion...")
+                return
+
         if (amountHealed > 0):
             self.player.take_damage(amountHealed*-1)
             self.notificationQueue.append("{0} {1} feeling normal again and {2} you candy. You gain {0} health.".format(amountHealed,
                                                                                                                           "people are" if amountHealed>1 else "person is",
                                                                                                                           "toss" if amountHealed>1 else "tosses"))
 
+
+    ##################################################
+    # "Non-Functional" Drawing Methods
+    ##################################################
     def draw(self, window):
+        if self.endscreen and len(self.notificationQueue)<=0:
+            self.endscreen.draw(window)
+            return
+
         WIDTH = window.get_width()
         HEIGHT = window.get_height()
         window.fill(self.config["COLOR_BACKGROUND"])

@@ -12,13 +12,18 @@ class Zombie(NPC):
         self.strength = 0
         self.modifier = 10
         self.image = pygame.image.load("assets\\Resources\\Zombie.png")
-        
-    def draw(self, window, position: (int, int)):
-        healthbar = Healthbar(self.health, self.maxHealth, (position[0], position[1] - self.image.get_height()/2 - 10))
-        window.blit(self.image, (position[0] - self.image.get_width() / 2, position[1] - self.image.get_height() / 2))
-        healthbar.draw(window)
 
+    # Overridden from parent class to add SourStraw weapon exception.
     def take_damage(self, damage, weapon):
         if weapon.__class__ == SourStraw:
             damage *= 2
         return super().take_damage(damage, weapon)
+
+
+    ##################################################
+    # "Non-Functional" Drawing Methods
+    ##################################################
+    def draw(self, window, position: (int, int)):
+        healthbar = Healthbar(self.health, self.maxHealth, (position[0], position[1] - self.image.get_height()/2 - 10))
+        window.blit(self.image, (position[0] - self.image.get_width() / 2, position[1] - self.image.get_height() / 2))
+        healthbar.draw(window)

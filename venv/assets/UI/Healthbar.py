@@ -1,10 +1,9 @@
 import pygame
 
+# Healthbar class used to draw healthbars on NPC's that require healthbars.
 class Healthbar():
     def __init__(self, health, maxHealth, position: (int, int)):
-        self.maxHealth = maxHealth
-        self.health = health
-        self.position = position
+        # Drawing configuration information.
         self.config = {"BORDER_COLOR": (255, 255, 255),
                        "BORDER_THICKNESS": 1,
                        "BACKGROUND_COLOR": (255, 60, 60),
@@ -12,6 +11,14 @@ class Healthbar():
                        "WIDTH": 60,
                        "HEIGHT": 12}
 
+        self.maxHealth = maxHealth
+        self.health = health
+        self.position = position
+
+
+    ##################################################
+    # "Non-Functional" Drawing Methods
+    ##################################################
     def draw(self, window):
         pygame.draw.rect(window, self.config["BORDER_COLOR"], (self.position[0] - self.config["WIDTH"] / 2,
                                                                self.position[1] - self.config["HEIGHT"] / 2,

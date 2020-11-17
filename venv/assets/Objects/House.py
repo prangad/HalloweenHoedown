@@ -19,9 +19,12 @@ class House(Observer):
         self.monsters = []
         self.monsterCount = random.randint(0, 10)
         self.color = pygame.Color((0, 0, 0)) # Base color to be overridden later.
+        self.searched = False # Used to search a home for weapons.
+        self.home = False # Used to determine which house is "home"
 
         self.populateHouse()
 
+    # Method used to populate the house on initialization.
     def populateHouse(self):
         monsterTypes = [Zombie, Werewolf, Vampire, Ghoul]
         numMonsters = 0;
